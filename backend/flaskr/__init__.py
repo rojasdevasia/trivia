@@ -9,11 +9,12 @@ from models import setup_db, Question, Category
 QUESTIONS_PER_PAGE = 10
 
 def paginate_questions(request,selection):
+    questions=[]
     page=request.args.get('page',1,type=int)
     start=(page-1) * QUESTIONS_PER_PAGE
     end=start+QUESTIONS_PER_PAGE
 
-    questions=[questions.format() for question in selection]
+    questions=[question.format() for question in selection]
     current_questions=questions[start:end]
 
     return current_questions
@@ -24,7 +25,7 @@ def create_app(test_config=None):
     setup_db(app)
    
     # Set up CORS. Allow '*' for origins
-    CORS(app,resources={r"*/api/*" : {'origins': '*'}})
+    CORS(app,resources={r"*" : {'origins': '*/api'}})
 
     #after_request decorator to set Access-Control-Allow
     @app.after_request
@@ -33,31 +34,43 @@ def create_app(test_config=None):
         response.headers.add('Access-Control-Allow-Headers', 'GET, POST, PATCH, DELETE, OPTIONS')
         return response
 
-    # GET Request for all available categories
+    # GET Request - Fetches a dictionary of categories
     @app.route('/categories')
     def get_categories():
-        data=[]
+        data={}
         categories_list=Category.query.all()
 
         for category in categories_list:
-            data.append({
-                "id":category.id,
-                "type":category.type
-            })
-
-        print(data)    
+            data[category.id]=category.type
 
         return jsonify({
             'success':True,
             'categories':data
         })
 
+    #GET Request - Fetches a paginated set of questions, a total number of questions, all categories and current category string.    
+    @app.route('/questions')
+    def get_questions():
+        # Fetch all questions
+        selection=Question.query.all()
+        current_questions= paginate_questions(request,selection)
 
-    """
-    @TODO:
-    Create an endpoint to handle GET requests
-    for all available categories.
-    """
+        if len(current_questions) == 0:
+            abort(404)
+
+        # Fetch all categories 
+        data={}
+        categories_list=Category.query.all()
+
+        for category in categories_list:
+            data[category.id]=category.type    
+
+        return jsonify({
+            'success':True,
+            'questions':current_questions,
+            'totalQuestions':len(current_questions),
+            'categories':data
+        })    
 
 
     """
