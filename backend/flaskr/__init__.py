@@ -96,7 +96,7 @@ def create_app(test_config=None):
 
     # Create new question
     @app.route('/questions',methods=['POST'])
-    def create_book():
+    def create_new_question():
         body=request.get_json()
         new_question=body.get('question',None)
         new_answer=body.get('answer',None)
@@ -173,11 +173,23 @@ def create_app(test_config=None):
         else:
             abort(404)        
 
-    """
-    @TODO:
-    Create error handlers for all expected errors
-    including 404 and 422.
-    """
+    # Error handler for 404
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({
+            'success':True,
+            "error":404,
+            "message":"Not found"
+        })
+
+    # Error handler for 422
+    @app.errorhandler(422)
+    def not_found(error):
+        return jsonify({
+            'success':True,
+            "error":422,
+            "message":"Unsupported"
+        })    
 
     return app
 
