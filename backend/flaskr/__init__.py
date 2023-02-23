@@ -37,41 +37,47 @@ def create_app(test_config=None):
     # GET Request - Fetches a dictionary of categories
     @app.route('/categories')
     def get_categories():
-        data={}
-        categories_list=Category.query.all()
+        try:
+            data={}
+            categories_list=Category.query.all()
 
-        for category in categories_list:
-            data[category.id]=category.type
+            for category in categories_list:
+                data[category.id]=category.type
 
-        return jsonify({
-            'success':True,
-            'categories':data
-        })
+            return jsonify({
+                'success':True,
+                'categories':data
+            })
+        except Exception as e:
+            print(e)    
 
     #GET Request - Fetches a paginated set of questions, a total number of questions, all categories and current category string.    
     @app.route('/questions')
     def get_questions():
-        # Fetch all questions
-        selection=Question.query.all()
-        current_questions= paginate_questions(request,selection)
+        try:
+            # Fetch all questions
+            selection=Question.query.all()
+            current_questions= paginate_questions(request,selection)
 
-        if len(current_questions) == 0:
-            abort(404)
+            if len(current_questions) == 0:
+                abort(404)
 
-        # Fetch all categories 
-        data={}
-        categories_list=Category.query.all()
+            # Fetch all categories 
+            data={}
+            categories_list=Category.query.all()
 
-        for category in categories_list:
-            data[category.id]=category.type    
+            for category in categories_list:
+                data[category.id]=category.type    
 
-        return jsonify({
-            'success':True,
-            'questions':current_questions,
-            'totalQuestions':len(current_questions),
-            'categories':data,
-            'currentCategory':""
-        })    
+            return jsonify({
+                'success':True,
+                'questions':current_questions,
+                'totalQuestions':len(current_questions),
+                'categories':data,
+                'currentCategory':""
+            })    
+        except Exception as e:
+            print(e)    
 
 
     # DELETE question using a question ID
@@ -91,7 +97,8 @@ def create_app(test_config=None):
                 'success':True,
                 'deleted':question_id
             })
-        except:
+        except Exception as e:
+            print(e)
             abort(422)
 
     # Create new question
@@ -109,43 +116,48 @@ def create_app(test_config=None):
 
             selection=Question.query.all()
             current_questions=paginate_questions(request,selection)
-        except:
+        except Exception as e:
+            print(e)
             abort(422)    
 
     # Search
     @app.route('/questions',methods=['POST'])
     def search():
-        body=request.get_json()
-        searchVal=body.get('searchTerm')
-        selection=Question.query.filter(Question.question.ilike('%'+'searchVal'+'%')).all()
+        try:
+            body=request.get_json()
+            searchVal=body.get('searchTerm')
+            selection=Question.query.filter(Question.question.ilike('%'+'searchVal'+'%')).all()
 
-        if len(selection) >0:
-            current_questions=paginate_questions(request,selection)
+            if len(selection) >0:
+                current_questions=paginate_questions(request,selection)
 
-            return jsonify({
-                'success':True,
-                'questions':current_questions,
-                'total_questions':len(selection),
-                'currentCategory':''
-            })
-        else:
+                return jsonify({
+                    'success':True,
+                    'questions':current_questions,
+                    'total_questions':len(selection),
+                    'currentCategory':''
+                })
+        except Exception as e:
+            print(e)
             abort(404)    
 
     # GET questions based on category
     @app.route('/categories/<int:id>/questions')
     def questions_of_category(id):
-        selection=Question.query.filter_by(category=id)
+        try:
+            selection=Question.query.filter_by(category=id)
 
-        if len(selection) >0:
-            current_questions=paginate_questions(request,selection)
+            if len(selection) >0:
+                current_questions=paginate_questions(request,selection)
 
-            return jsonify({
-                'success':True,
-                'questions':current_questions,
-                'total_questions':len(selection),
-                'currentCategory':''
-            })
-        else:
+                return jsonify({
+                    'success':True,
+                    'questions':current_questions,
+                    'total_questions':len(selection),
+                    'currentCategory':''
+                })
+        except Exception as e:
+            print(e)
             abort(404)  
 
     # POST for quizzes
