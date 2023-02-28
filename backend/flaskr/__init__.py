@@ -178,20 +178,25 @@ def create_app(test_config=None):
             previous_questions=body.get('previous_questions',None)
             quiz_category=body.get('quiz_category',None)
 
-            questions=Question.query.filter_by(category=quiz_category)
+            # print(previous_questions)
+            # print(quiz_category)
+
+            # Selecting 'All'
+            if quiz_category["id"] == 0:
+                questions=Question.query.all()
+            else:    
+                questions=Question.query.filter_by(category=quiz_category["id"]).all()
+            # print(questions)
 
             for question in questions:
                 if question.id not in previous_questions:
-                    selection.append({
-                        
-                    })
+                    selection.append(question)
 
-            if len(selection) >0:
-                current_questions=paginate_questions(request,selection)
+            # print(selection)
 
-                return jsonify({
+            return jsonify({
                     'success':True,
-                    'questions':current_questions
+                    'question':random.choice(selection).format()
                 })
         except Exception as e:
             print(e)
