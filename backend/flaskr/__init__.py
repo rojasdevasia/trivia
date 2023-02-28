@@ -25,7 +25,8 @@ def create_app(test_config=None):
     setup_db(app)
    
     # Set up CORS. Allow '*' for origins
-    CORS(app,resources={r"*" : {'origins': '*/api'}})
+    # CORS(app,resources={r"*" : {'origins': '*/api'}})
+    CORS(app,resources={r"/" : {'origins': '*'}})
 
     #after_request decorator to set Access-Control-Allow
     @app.after_request
@@ -103,30 +104,37 @@ def create_app(test_config=None):
 
     # Create new question
     @app.route('/questions',methods=['POST'])
-    def create_new_question():
+    @cross_origin()
+    def create_question():
         body=request.get_json()
         new_question=body.get('question',None)
         new_answer=body.get('answer',None)
-        new_category=body.get('category',None)
+        new_category_id=body.get('category',None)
         new_difficulty_score=body.get('difficulty',None)
 
         try:
-            question=Question(question=new_question,answer=new_answer,category=new_category,difficulty=new_difficulty_score)
+            question=Question(question=new_question,answer=new_answer,category=new_category_id,
+                              difficulty=new_difficulty_score)
             question.insert()
 
-            selection=Question.query.all()
-            current_questions=paginate_questions(request,selection)
+            return jsonify({
+                "success":True
+            })
+
         except Exception as e:
             print(e)
             abort(422)    
 
     # Search
     @app.route('/questions',methods=['POST'])
+    @cross_origin()
     def search():
         try:
             body=request.get_json()
             searchVal=body.get('searchTerm')
-            selection=Question.query.filter(Question.question.ilike('%'+'searchVal'+'%')).all()
+            print(searchVal)
+
+            selection=Question.query.filter(Question.question.ilike('%'+searchVal+'%')).all()
 
             if len(selection) >0:
                 current_questions=paginate_questions(request,selection)
@@ -145,7 +153,7 @@ def create_app(test_config=None):
     @app.route('/categories/<int:id>/questions')
     def questions_of_category(id):
         try:
-            selection=Question.query.filter_by(category=id)
+            selection=Question.query.filter_by(category=id).all()
 
             if len(selection) >0:
                 current_questions=paginate_questions(request,selection)
@@ -162,27 +170,31 @@ def create_app(test_config=None):
 
     # POST for quizzes
     @app.route('/quizzes',methods=['POST'])
+    @cross_origin()
     def play_quiz():
-        body=request.get_json()
-        selection=[]
-        previous_questions=body.get('previous_questions',None)
-        quiz_category=body.get('quiz_category',None)
+        try:
+            body=request.get_json()
+            selection=[]
+            previous_questions=body.get('previous_questions',None)
+            quiz_category=body.get('quiz_category',None)
 
-        questions=Question.query.filter_by(category=quiz_category)
+            questions=Question.query.filter_by(category=quiz_category)
 
-        for question in questions:
-            if question.id not in previous_questions:
-                selection.append(question)
+            for question in questions:
+                if question.id not in previous_questions:
+                    selection.append({
+                        
+                    })
 
-        if len(selection) >0:
-            current_questions=paginate_questions(request,selection)
+            if len(selection) >0:
+                current_questions=paginate_questions(request,selection)
 
-            return jsonify({
-                'success':True,
-                'questions':current_questions,
-                'previousQuestion':""
-            })
-        else:
+                return jsonify({
+                    'success':True,
+                    'questions':current_questions
+                })
+        except Exception as e:
+            print(e)
             abort(404)        
 
     # Error handler for 404
