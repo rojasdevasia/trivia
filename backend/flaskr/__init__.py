@@ -129,22 +129,26 @@ def create_app(test_config=None):
     @app.route('/questions',methods=['POST'])
     @cross_origin()
     def search():
+        print('INSIDE search function')
         try:
             body=request.get_json()
-            searchVal=body.get('searchTerm')
+            selection=[]
+            searchVal=body.get('searchTerm',None)
             print(searchVal)
 
-            selection=Question.query.filter(Question.question.ilike('%'+searchVal+'%')).all()
+            if searchVal:
+                questions=Question.query.filter(Question.question.ilike('%'+searchVal+'%')).all()
+                print(questions)
 
-            if len(selection) >0:
-                current_questions=paginate_questions(request,selection)
+                if len(questions) >0:
+                    current_questions=paginate_questions(request,selection)
 
-                return jsonify({
-                    'success':True,
-                    'questions':current_questions,
-                    'total_questions':len(selection),
-                    'currentCategory':''
-                })
+                    return jsonify({
+                        'success':True,
+                        'questions':current_questions,
+                        'total_questions':len(current_questions),
+                        'currentCategory':" "
+                    })
         except Exception as e:
             print(e)
             abort(404)    
