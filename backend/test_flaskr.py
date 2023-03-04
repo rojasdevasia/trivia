@@ -148,7 +148,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data["question"])    
 
     def test_quizzes_not_found(self):
-        response=self.client().patch('/quizzes')
+        response=self.client().post('/quizzes',json={'difficulty':1})
         data=json.loads(response.data)   
         self.assertEqual(response.status_code,404)
         self.assertEqual(data["success"],False)       
