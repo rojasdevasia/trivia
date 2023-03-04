@@ -50,7 +50,8 @@ def create_app(test_config=None):
                 'categories':data
             })
         except Exception as e:
-            print(e)    
+            print(e)  
+            abort(404)  
 
     #GET Request - Fetches a paginated set of questions, a total number of questions, all categories and current category string.    
     @app.route('/questions')
