@@ -23,7 +23,7 @@ class TriviaTestCase(unittest.TestCase):
         # binds the app to the current context
         with self.app.app_context():
             self.db = SQLAlchemy()
-            # self.db.init_app(self.app)
+            self.db.init_app(self.app)
             # create all tables
             self.db.create_all()
 
@@ -134,7 +134,8 @@ class TriviaTestCase(unittest.TestCase):
         data=json.loads(response.data)   
         self.assertEqual(response.status_code,200)
         self.assertEqual(data["success"],True)
-        self.assertTrue(data["question"])          
+        self.assertTrue(data["question"])    
+      
 
 # Make the tests conveniently executable
 if __name__ == "__main__":
