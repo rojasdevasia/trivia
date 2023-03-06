@@ -107,52 +107,45 @@ def create_app(test_config=None):
     @app.route('/questions',methods=['POST'])
     @cross_origin()
     def create_question():
-        body=request.get_json()
-        new_question=body.get('question',None)
-        new_answer=body.get('answer',None)
-        new_category_id=body.get('category',None)
-        new_difficulty_score=body.get('difficulty',None)
+        body = request.get_json()
+        searchVal=body.get('searchTerm',None)
+        selection=[]
 
-        try:
-            question=Question(question=new_question,answer=new_answer,category=new_category_id,
-                              difficulty=new_difficulty_score)
-            question.insert()
+        if searchVal:
+            try:
+                questions = Question.query.filter(Question.question.ilike('%' + searchVal + '%')).all()
+                current_questions = paginate_questions(request, questions)                 
 
-            return jsonify({
-                "success":True
-            })
-
-        except Exception as e:
-            print(e)
-            abort(422)    
-
-    # Search
-    @app.route('/questions',methods=['POST'])
-    @cross_origin()
-    def search():
-        print('INSIDE search function')
-        try:
-            body=request.get_json()
-            selection=[]
-            searchVal=body.get('searchTerm',None)
-            print(searchVal)
-
-            if searchVal:
-                questions=Question.query.filter(Question.question.ilike('%'+searchVal+'%')).all()
-                print(questions)
-
-                if len(questions) >0:
-                    current_questions=paginate_questions(request,selection)
-
+                if len(current_questions) == 0:
+                    abort(422)
+                else:    
                     return jsonify({
-                        'success':True,
-                        'questions':current_questions,
-                        'total_questions':len(current_questions),
-                        'currentCategory':" "
-                    })
-        except Exception as e:
-            print(e)
-            abort(404)    
+                        'success': True, 
+                        'questions': current_questions, 
+                        'total_questions': len(current_questions) 
+                        })
+            except:
+                abort(422)
+        else:            
+            try:
+                new_question = body.get('question', None)
+                new_answer = body.get('answer', None)
+                new_category = body.get('category', None)
+                new_difficulty = body.get('difficulty', None)
+
+                question = Question(question=new_question, answer=new_answer, category=new_category, difficulty=new_difficulty)
+                question.insert()
+
+                selection = Question.query.all()
+                current_questions = paginate_questions(request, selection)
+
+                return jsonify({ 
+                    "success": True, 
+                    "created": question.id, 
+                    "questions": current_questions, 
+                    "total_questions": len(current_questions)})
+            except:
+                abort(422)  
 
     # GET questions based on category
     @app.route('/categories/<int:id>/questions')
@@ -223,6 +216,15 @@ def create_app(test_config=None):
             'success':True,
             "error":422,
             "message":"Unsupported"
+        })    
+    
+    # Error handler for 405
+    @app.errorhandler(405)
+    def not_found(error):
+        return jsonify({
+            'success':True,
+            "error":405,
+            "message":"method not allowed"
         })    
 
     return app
